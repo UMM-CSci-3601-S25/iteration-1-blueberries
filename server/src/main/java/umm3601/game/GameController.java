@@ -18,19 +18,19 @@ import io.javalin.http.NotFoundResponse;
 import umm3601.Controller;
 
 /**
- * Controller that manages requests for info about users.
+ * Controller that manages requests for info about games.
  */
 public class GameController implements Controller {
 
   private static final String API_GAMES = "/api/games";
   private static final String API_GAME_BY_ID = "/api/games/{id}";
-
+  static final String JOINCODE_KEY = "joincode";
   private final JacksonMongoCollection<Game> gameCollection;
 
   /**
-   * Construct a controller for users.
+   * Construct a controller for games.
    *
-   * @param database the database containing user data
+   * @param database the database containing game data
    */
   public GameController(MongoDatabase database) {
     gameCollection = JacksonMongoCollection.builder().build(
@@ -53,7 +53,7 @@ public class GameController implements Controller {
     try {
       game = gameCollection.find(eq("_id", new ObjectId(id))).first();
     } catch (IllegalArgumentException e) {
-      throw new BadRequestResponse("The requested user id wasn't a legal Mongo Object ID.");
+      throw new BadRequestResponse("The requested game id wasn't a legal Mongo Object ID.");
     }
     if (game == null) {
       throw new NotFoundResponse("The requested game was not found");
@@ -64,7 +64,7 @@ public class GameController implements Controller {
   }
 
   /**
-   * Add a new user using information from the context
+   * Add a new game using information from the context
    * (as long as the information gives "legal" values to Game fields)
    *
    * @param ctx a Javalin HTTP context that provides the game info
@@ -90,13 +90,13 @@ public class GameController implements Controller {
     // Add the new game to the database
     gameCollection.insertOne(newGame);
 
-    // Set the JSON response to be the `_id` of the newly created user.
-    // This gives the client the opportunity to know the ID of the new user,
+    // Set the JSON response to be the `_id` of the newly created game.
+    // This gives the client the opportunity to know the ID of the new game,
     // which it can then use to perform further operations (e.g., a GET request
-    // to get and display the details of the new user).
+    // to get and display the details of the new game).
     ctx.json(Map.of("id", newGame._id));
     // 201 (`HttpStatus.CREATED`) is the HTTP code for when we successfully
-    // create a new resource (a user in this case).
+    // create a new resource (a game in this case).
     // See, e.g., https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
     // for a description of the various response codes.
     ctx.status(HttpStatus.CREATED);
