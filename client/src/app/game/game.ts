@@ -5,5 +5,5 @@ export interface Game {
   joincode: string;
   players: string[];
   currentRound: number;
-  rounds: Round[];
+  rounds?: Round[];
 }
