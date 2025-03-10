@@ -1,0 +1,18 @@
+[
+  {
+    "_id": {
+      "$oid": "588935f57546a2daea44de7c"
+    },
+    "joincode": "111",
+    "players": [ "KK", "Jeff", "Maura", "Anne" ],
+    "currentRound": 0
+  },
+  {
+    "_id": {
+      "$oid": "588935f5597715f06f3e8f6c"
+    },
+    "joincode": "222",
+    "players": [ "Aaron", "Bob", "Carol", "Dan" ],
+    "currentRound": 0
+   }
+]
