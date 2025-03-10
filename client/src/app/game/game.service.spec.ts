@@ -39,15 +39,12 @@ describe('GameService', () => {
     httpClient = TestBed.inject(HttpClient);
     httpTestingController = TestBed.inject(HttpTestingController);
     gameService = new GameService(httpClient);
-
-    //userService = new UserService(httpClient);
   });
 
   afterEach(() => {
     // After every test, assert that there are no more pending requests.
     httpTestingController.verify();
   });
-
 
   describe('When getUserById() is given an ID', () => {
     /* We really don't care what `getGameById()` returns. Since all the
