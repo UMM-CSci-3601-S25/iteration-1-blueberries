@@ -5,7 +5,7 @@
   @if (game().players) {
     <mat-list data-test="player-list">
     @for (player of game().players; track player; let i = $index) {
-      <mat-list-item data-test="player-name">{{ i }} {{ player }}</mat-list-item>
+      <mat-list-item data-test="player">{{ i }} {{ player }}</mat-list-item>
     }
     </mat-list>
   }
