@@ -1,6 +1,9 @@
 package umm3601;
 
 import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
@@ -11,6 +14,7 @@ import org.bson.UuidRepresentation;
 
 import io.javalin.Javalin;
 import io.javalin.http.InternalServerErrorResponse;
+import io.javalin.websocket.WsContext;
 
 /**
  * The class used to configure and start a Javalin server.
@@ -19,6 +23,12 @@ public class Server {
 
   // The port that the server should run on.
   private static final int SERVER_PORT = 4567;
+
+  // How long should we wait between updating web socket information
+  private static final long WEB_SOCKET_PING_INTERVAL = 5;
+
+  // What clients are connected via web sockets
+  private static Set<WsContext> connectedClients = ConcurrentHashMap.newKeySet();
 
   // The `mongoClient` field is used to access the MongoDB
   private final MongoClient mongoClient;
@@ -41,6 +51,9 @@ public class Server {
     // it in, we don't have to worry about it. If we didn't do this,
     // the caller could modify the array after passing it in, and then
     // we'd be using the modified array without realizing it.
+    //
+    // **(In the web socket example I'm working from, they did not do this,
+    // so the right hand side of the = is just `controllers`)
     this.controllers = Arrays.copyOf(controllers, controllers.length);
   }
 
@@ -57,7 +70,7 @@ public class Server {
    * so they can be used when setting up the Javalin server.
    * @param mongoAddr The address of the MongoDB server
    *
-   * @return The MongoDB client object
+   * @return The configured MongoDB client object
    */
   static MongoClient configureDatabase(String mongoAddr) {
     // Setup the MongoDB client object with the information we set earlier
@@ -79,11 +92,15 @@ public class Server {
    * This configures and starts the Javalin server, which will start listening for HTTP requests.
    * It also sets up the server to shut down gracefully if it's killed or if the
    * JVM is shut down.
+   *
+   * ** this is public in the example I'm working from **
    */
   void startServer() {
+    System.out.println("Starting server...");
     Javalin javalin = configureJavalin();
     setupRoutes(javalin);
     javalin.start(SERVER_PORT);
+    System.out.println("Server started on port " + SERVER_PORT);
   }
 
   /**
@@ -95,6 +112,7 @@ public class Server {
    *   JVM is shut down.
    * - Setting up a handler for uncaught exceptions to return an HTTP 500
    *   error.
+   * - Setting up WebSocket endpoints
    *
    * @return The Javalin server instance
    */
@@ -117,6 +135,27 @@ public class Server {
       config.bundledPlugins.enableRouteOverview("/api")
     );
 
+    System.out.println("Configuring WebSocket endpoint...");
+    server.ws("/api/websocket", ws -> {
+      System.out.println("WebSocket endpoint created");
+      ws.onConnect(ctx -> {
+        connectedClients.add(ctx);
+        ctx.enableAutomaticPings(WEB_SOCKET_PING_INTERVAL, TimeUnit.SECONDS);
+        System.out.println("Client connected");
+      });
+
+      ws.onMessage(ctx -> {
+        String message = ctx.message();
+        System.out.println("Received message from client");
+        broadcastMessage(message);
+      });
+
+      ws.onClose(ctx -> {
+        connectedClients.remove(ctx);
+        System.out.println("Client disconnected");
+      });
+    });
+
     // Configure the MongoDB client and the Javalin server to shut down gracefully.
     configureShutdowns(server);
 
@@ -134,6 +173,17 @@ public class Server {
     });
 
     return server;
+  }
+
+  /**
+   * Broadcasts a message to all connected WebSocket clients.
+   *
+   * @param message The message to broadcast
+   */
+  private static void broadcastMessage(String message) {
+    for (WsContext client : connectedClients) {
+      client.send(message);
+    }
   }
 
   /**
@@ -174,3 +224,5 @@ public class Server {
     }
   }
 }
+//more web sockets stuff to look at
+//https://github.com/UMM-CSci-3601-F24/it-3-mary-shellys-cool-1918-howard-frankendogs-football-team/commit/877e9e4387234ee090962fb6ccd28fa25ac1e94a
