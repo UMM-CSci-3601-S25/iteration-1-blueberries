@@ -29,4 +29,8 @@ export class GameService {
     // `res.id` should be the MongoDB ID of the newly added `Game`.
     return this.httpClient.post<{id: string}>(this.gameUrl, newGame).pipe(map(response => response.id));
   }
+
+  addPlayer(newPlayer: string, game: Game) {
+    game.players = game.players.concat(newPlayer);
+  }
 }
