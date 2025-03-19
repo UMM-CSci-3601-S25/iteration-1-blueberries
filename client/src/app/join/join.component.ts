@@ -4,13 +4,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { GameService } from '../game/game.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { GameService } from '../game/game.service';
 import { WebSocketService } from '../game/web-socket.service';
 
 @Component({
-  selector: 'app-host',
+  selector: 'app-join',
   imports:
     [
       FormsModule,
@@ -20,18 +20,18 @@ import { WebSocketService } from '../game/web-socket.service';
       MatInputModule,
       MatButtonModule
     ],
-  templateUrl: './host.component.html',
-  styleUrl: './host.component.scss'
+  templateUrl: './join.component.html',
+  styleUrl: './join.component.scss'
 })
-export class HostComponent {
+export class JoinComponent {
 
-  addGameForm = new FormGroup({
-    // We allow alphanumeric input and limit the length for name.
-    joincode: new FormControl('', Validators.compose([
+  joinGameForm = new FormGroup({
+    // We allow alphanumeric input and limit the length for a game id.
+    gameId: new FormControl('', Validators.compose([
       Validators.required,
-      Validators.minLength(1),
-      // Long join codes are very inconvenient
-      Validators.maxLength(10),
+      Validators.minLength(24),
+      // length of the game id will be 24
+      Validators.maxLength(24),
     ])),
     playerName: new FormControl('', Validators.compose([
       Validators.required,
@@ -39,13 +39,14 @@ export class HostComponent {
       // length of the player name must be 2-100 characters
       Validators.maxLength(100),
     ])),
+
   });
 
-  readonly addGameValidationMessages = {
-    joincode: [
-      {type: 'required', message: 'Join code is required'},
-      {type: 'minlength', message: 'Name must be at least 2 characters long'},
-      {type: 'maxlength', message: 'Name cannot be more than 10 characters long'},
+  readonly joinGameValidationMessages = {
+    gameId: [
+      {type: 'required', message: 'Game ID is required'},
+      {type: 'minlength', message: 'Name must be at least 24 characters long'},
+      {type: 'maxlength', message: 'Name cannot be more than 24 characters long'},
     ],
     playerName: [
       {type: 'required', message: 'Player name is required'},
@@ -62,13 +63,13 @@ export class HostComponent {
   }
 
   formControlHasError(controlName: string): boolean {
-    return this.addGameForm.get(controlName).invalid &&
-      (this.addGameForm.get(controlName).dirty || this.addGameForm.get(controlName).touched);
+    return this.joinGameForm.get(controlName).invalid &&
+      (this.joinGameForm.get(controlName).dirty || this.joinGameForm.get(controlName).touched);
   }
 
-  getErrorMessage(name: keyof typeof this.addGameValidationMessages): string {
-    for(const {type, message} of this.addGameValidationMessages[name]) {
-      if (this.addGameForm.get(name).hasError(type)) {
+  getErrorMessage(name: keyof typeof this.joinGameValidationMessages): string {
+    for(const {type, message} of this.joinGameValidationMessages[name]) {
+      if (this.joinGameForm.get(name).hasError(type)) {
         return message;
       }
     }
@@ -76,26 +77,26 @@ export class HostComponent {
   }
 
   submitForm() {
-    this.gameService.addGame({joincode: this.addGameForm.value.joincode}).subscribe({
-      next: (newId) => {
+    this.gameService.addPlayer(this.joinGameForm.value.gameId, this.joinGameForm.value.playerName).subscribe({
+      next: () => {
         this.snackBar.open(
-          `Added game with join code: ${this.addGameForm.value.joincode}`,
+          `Joined game with id: ${this.joinGameForm.value.gameId}`,
           null,
           { duration: 2000 }
         );
-        this.onPlayerAdd({ gameId: newId })
-        this.router.navigate(['/games/', newId]);
+        this.onPlayerAdd();
+        this.router.navigate([`/games/${this.joinGameForm.value.gameId}`]);
       },
       error: err => {
         if (err.status === 400) {
           this.snackBar.open(
-            `Tried to add and host an illegal new game – Error Code: ${err.status}\nMessage: ${err.message}`,
+            `Tried to join an illegal game – Error Code: ${err.status}\nMessage: ${err.message}`,
             'OK',
             { duration: 5000 }
           );
         } else if (err.status === 500) {
           this.snackBar.open(
-            `The server failed to process your request to add a new game to host. Is the server up? – Error Code: ${err.status}\nMessage: ${err.message}`,
+            `The server failed to process your request to join a game. Is the server up? – Error Code: ${err.status}\nMessage: ${err.message}`,
             'OK',
             { duration: 5000 }
           );
@@ -110,13 +111,11 @@ export class HostComponent {
     });
   }
 
-  onPlayerAdd(event: { gameId: string }) {
-    // When adding a player who will be the host, the game is new, so we need to know the id
-    // We can get the id for the new game once it is generated in the "next" part of "submitForm"
+  onPlayerAdd() {
     const message = {
       type: 'ADD_PLAYER',
-      gameId: event.gameId,
-      playerName: this.addGameForm.value.playerName,
+      gameId: this.joinGameForm.value.gameId,
+      playerName: this.joinGameForm.value.playerName,
     };
 
     this.webSocketService.sendMessage(message);

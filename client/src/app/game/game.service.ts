@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { Game } from './game';
-import { map, Observable } from 'rxjs';
+import { firstValueFrom, map, Observable } from 'rxjs';
+import { ProjectDefinitionCollection } from '@angular-devkit/core/src/workspace';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +31,16 @@ export class GameService {
     return this.httpClient.post<{id: string}>(this.gameUrl, newGame).pipe(map(response => response.id));
   }
 
-  addPlayer(newPlayer: string, game: Game) {
-    game.players = game.players.concat(newPlayer);
+  addPlayer(gameId: string, newPlayer: string): Observable<string[]> {
+    const game = this.getGameById(gameId).pipe(map(value => value));
+    // Look at the game with the given id, take all the values, but update the players to add the new one
+    const gamePartial: Partial<Game> = {
+      _id: gameId,
+      joincode: game().joincode,
+      players: game.players.concat(newPlayer),
+      currentRound: game.currentRound,
+      rounds: game.rounds,
+    }
+    return this.httpClient.post<Game>(this.gameUrl, gamePartial).pipe(map(response => response.players));
   }
 }

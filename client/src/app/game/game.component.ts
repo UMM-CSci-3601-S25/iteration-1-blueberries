@@ -42,26 +42,16 @@ export class GameComponent {
     this.webSocketService.getMessage().subscribe((message: unknown) => {
       const msg = message as {
         type?: string;
-        player?: string;
-        game?: Game;
+        gameId?: string;
+        playerName?: string;
       }; // all of these are optional to allow heartbeat messages to pass through
 
       if (
         msg.type === 'ADD_PLAYER'
       ) {
-        this.gameService.addPlayer(msg.player, msg.game);
+        this.gameService.addPlayer(msg.gameId, msg.playerName);
       }
     });
-  }
-
-  onPlayerAdd(event: { player: string }) {
-    const message = {
-      type: 'ADD_PLAYER',
-      player: event.player,
-      game: this.game,
-    };
-
-    this.webSocketService.sendMessage(message);
   }
 
 }

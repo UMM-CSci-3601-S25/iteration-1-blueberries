@@ -1,24 +1,24 @@
-<p>This page will have the options for the game, but for now just has a join code and a way to enter this host/player's name</p>
-<form [formGroup]="addGameForm" (ngSubmit)="submitForm();">
+<p>Use a Game ID and player name to join a game</p>
+<form [formGroup]="joinGameForm" (ngSubmit)="submitForm();">
   <mat-card class="add-user-card">
     <mat-card-header>
-      <mat-card-title class="add-game-title">Host a new game</mat-card-title>
+      <mat-card-title class="add-game-title">Join a game</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <div class="flex-col">
 
         <mat-form-field>
-          <mat-label for="joincode">Join Code</mat-label>
+          <mat-label for="gameId">Game ID</mat-label>
           <input matInput type="text"
-            formControlName="joincode" required>
-          @if (formControlHasError('joincode')) {
-            <mat-error data-test="joincodeError">
-              {{getErrorMessage('joincode')}}
+            formControlName="gameId" required>
+          @if (formControlHasError('gameId')) {
+            <mat-error data-test="gameIdError">
+              {{getErrorMessage('gameId')}}
             </mat-error>
           }
         </mat-form-field>
         <mat-form-field>
-          <mat-label for="playerName">Player/Host Name</mat-label>
+          <mat-label for="playerName">Player Name</mat-label>
           <input matInput type="text"
             formControlName="playerName" required>
           @if (formControlHasError('playerName')) {
@@ -36,15 +36,12 @@
         mat-raised-button
         type="button"
         color="primary"
-        [disabled]="!addGameForm.valid"
+        [disabled]="!joinGameForm.valid"
         type="submit"
-        data-test="confirmJoinAsHostButton"
+        data-test="confirmJoinButton"
         >
-        JOIN AS HOST
+        JOIN GAME
       </button>
     </mat-card-actions>
   </mat-card>
 </form>
-
-
-
