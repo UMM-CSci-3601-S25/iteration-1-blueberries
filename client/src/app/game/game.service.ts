@@ -2,8 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { Game } from './game';
-import { firstValueFrom, map, Observable } from 'rxjs';
-import { ProjectDefinitionCollection } from '@angular-devkit/core/src/workspace';
+import { map, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +17,7 @@ export class GameService {
    * Get the `Game` with the specified ID.
    *
    * @param id the ID of the desired game
-   * @returns an `Observable` containing the resulting user.
+   * @returns an `Observable` containing the resulting game.
    */
   getGameById(id: string): Observable<Game> {
     // The input to get could also be written as (this.userUrl + '/' + id)
@@ -31,16 +30,16 @@ export class GameService {
     return this.httpClient.post<{id: string}>(this.gameUrl, newGame).pipe(map(response => response.id));
   }
 
-  addPlayer(gameId: string, newPlayer: string): Observable<string[]> {
-    const game = this.getGameById(gameId).pipe(map(value => value));
+  // Much of the structure of the addPlayer method is modeled after editWordList in this repo:
+  // https://github.com/kidstech/word-river/blob/main/client/src/app/services/wordlist.service.ts
+  // editWordList(name: string, wordList: WordList, id: string): Observable<WordList> {
+  //   return this.httpClient.put<WordList>(this.wordListUrl + id + '/' + name, wordList).pipe(map(res => res));
+  // }
+  //
+  // One thing I (KK) am still not sure about is this use of path parameters versus using a body for the request
+  // or using query parameters (seems like query parameters are more for "get" operations)
+  addPlayer(gameId: string, newPlayer: string): Observable<Game> {
     // Look at the game with the given id, take all the values, but update the players to add the new one
-    const gamePartial: Partial<Game> = {
-      _id: gameId,
-      joincode: game().joincode,
-      players: game.players.concat(newPlayer),
-      currentRound: game.currentRound,
-      rounds: game.rounds,
-    }
-    return this.httpClient.post<Game>(this.gameUrl, gamePartial).pipe(map(response => response.players));
+    return this.httpClient.put<Game>(`${this.gameUrl}/${gameId}/${newPlayer}`, null);
   }
 }

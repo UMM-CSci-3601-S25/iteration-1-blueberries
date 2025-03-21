@@ -7,7 +7,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { GameService } from '../game/game.service';
-import { WebSocketService } from '../game/web-socket.service';
 
 @Component({
   selector: 'app-host',
@@ -55,7 +54,6 @@ export class HostComponent {
   };
 
   constructor(
-    private webSocketService: WebSocketService,
     private gameService: GameService,
     private snackBar: MatSnackBar,
     private router: Router) {
@@ -76,14 +74,19 @@ export class HostComponent {
   }
 
   submitForm() {
-    this.gameService.addGame({joincode: this.addGameForm.value.joincode}).subscribe({
+    // Make a new game with the host as the only initial player using the joincode the host chose
+    // And, since we are using the id for the game, the joincode is probably not needed, but I (KK)
+    // made joincode required in several places and haven't removed it yet (might still be useful
+    // for something since it's much easier to recognize than the id). I initially also sent a
+    // websocket message from here and I don't think we need to since this will be the first person
+    // joining and the game will be brand new (this is almost like the join page, but without websocket stuff)
+    this.gameService.addGame({joincode: this.addGameForm.value.joincode, players: [`${this.addGameForm.value.playerName}`], currentRound: 0}).subscribe({
       next: (newId) => {
         this.snackBar.open(
           `Added game with join code: ${this.addGameForm.value.joincode}`,
           null,
           { duration: 2000 }
         );
-        this.onPlayerAdd({ gameId: newId })
         this.router.navigate(['/games/', newId]);
       },
       error: err => {
@@ -108,17 +111,5 @@ export class HostComponent {
         }
       },
     });
-  }
-
-  onPlayerAdd(event: { gameId: string }) {
-    // When adding a player who will be the host, the game is new, so we need to know the id
-    // We can get the id for the new game once it is generated in the "next" part of "submitForm"
-    const message = {
-      type: 'ADD_PLAYER',
-      gameId: event.gameId,
-      playerName: this.addGameForm.value.playerName,
-    };
-
-    this.webSocketService.sendMessage(message);
   }
 }

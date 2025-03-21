@@ -82,10 +82,9 @@ export class JoinComponent {
         this.snackBar.open(
           `Joined game with id: ${this.joinGameForm.value.gameId}`,
           null,
-          { duration: 2000 }
+          { duration: 5000 }
         );
         this.onPlayerAdd();
-        this.router.navigate([`/games/${this.joinGameForm.value.gameId}`]);
       },
       error: err => {
         if (err.status === 400) {
@@ -108,6 +107,9 @@ export class JoinComponent {
           );
         }
       },
+      complete: () => {
+        this.router.navigate([`/games/${this.joinGameForm.value.gameId}`]);
+      }
     });
   }
 

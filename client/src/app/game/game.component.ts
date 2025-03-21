@@ -1,10 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, ParamMap } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { GameService } from './game.service';
 import { WebSocketService } from './web-socket.service';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { catchError, map, switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { MatListModule } from '@angular/material/list';
 import { Game } from './game';
 
@@ -21,37 +18,54 @@ export class GameComponent {
   webSocketService = inject(WebSocketService);
   gameService = inject(GameService);
   route = inject(ActivatedRoute);
-  game = toSignal(
-    this.route.paramMap.pipe(
-      map((paramMap: ParamMap) => paramMap.get('id')),
-      switchMap((id: string) => this.gameService.getGameById(id)),
-      catchError((_err) => {
-        this.error.set({
-          help: 'There was a problem loading the game – try again.',
-          httpResponse: _err.message,
-          message: _err.error?.title,
-        });
-        return of();
-      })
-    )
-  );
-  // The `error` will initially have empty strings for all its components.
+  game = signal<Game | null>(null);
+  gameId: string = this.route.snapshot.params['id'];
+
   error = signal({ help: '', httpResponse: '', message: '' });
 
   constructor() {
+    this.gameService.getGameById(this.gameId).subscribe(
+      (response) => {
+        this.game.set(response);
+      });
+
     this.webSocketService.getMessage().subscribe((message: unknown) => {
       const msg = message as {
         type?: string;
         gameId?: string;
         playerName?: string;
-      }; // all of these are optional to allow heartbeat messages to pass through
+      };
+      // This comment and much of how the websockets stuff works comes from
+      // https://github.com/UMM-CSci-3601-F24/it-3-mary-shellys-cool-1918-howard-frankendogs-football-team/tree/main
+      // "all of these are optional to allow heartbeat messages to pass through",
+      // but I (KK) haven't done anything with heartbeat stuff yet... apparently it helps keep things connected
 
       if (
-        msg.type === 'ADD_PLAYER'
+        // The websocket message is about adding a player and refers to
+        // the game this GameComponent is displaying
+        // (note: it may make more sense to look at how the websocket messaging
+        // works and only broadcast to clients that are associated with *this* game,
+        // but I don't know how to do that yet)
+        msg.type === 'ADD_PLAYER' &&
+        msg.gameId === this.gameId
       ) {
-        this.gameService.addPlayer(msg.gameId, msg.playerName);
+        console.log("client received broadcast for game: " + msg.gameId + " to add: " + msg.playerName);
+        console.log("The game id in this component is: " + this.game);
+        this.updateGame(msg.playerName);
+        //this.gameService.addPlayer(msg.gameId, msg.playerName);
       }
     });
   }
 
+  // probably, this will be updated to have optional inputs about all the ways a game could change
+  // and those things will be labeled and in a {}, but for now it's just one way to update
+  updateGame(newPlayer: string) {
+    // only push a new player to the array if the updateGame method was called from
+    // someplace that has a game (if game is null, don't try to push to players array)
+    if (this.game()) {
+      this.game().players.push(newPlayer);
+    }
+    // send a note that the game was updated
+    return computed(() => this.game);
+  }
 }
