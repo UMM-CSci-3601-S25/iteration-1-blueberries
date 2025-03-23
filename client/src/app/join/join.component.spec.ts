@@ -10,7 +10,7 @@ describe('JoinComponent', () => {
     await TestBed.configureTestingModule({
       imports: [JoinComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(JoinComponent);
     component = fixture.componentInstance;
