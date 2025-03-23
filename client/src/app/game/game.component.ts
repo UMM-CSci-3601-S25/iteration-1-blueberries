@@ -49,9 +49,10 @@ export class GameComponent {
         msg.type === 'ADD_PLAYER' &&
         msg.gameId === this.gameId
       ) {
-        console.log("client received broadcast for game: " + msg.gameId + " to add: " + msg.playerName);
-        console.log("The game id in this component is: " + this.game);
         this.updateGame(msg.playerName);
+        //this.game().currentRound = this.game().currentRound + 1;
+        console.log("client received broadcast for game: " + msg.gameId + " to add: " + msg.playerName);
+        console.log("The game in this component is: " + this.game());
         //this.gameService.addPlayer(msg.gameId, msg.playerName);
       }
     });
@@ -59,13 +60,18 @@ export class GameComponent {
 
   // probably, this will be updated to have optional inputs about all the ways a game could change
   // and those things will be labeled and in a {}, but for now it's just one way to update
-  updateGame(newPlayer: string) {
+  updateGame(playerName: string) {
     // only push a new player to the array if the updateGame method was called from
     // someplace that has a game (if game is null, don't try to push to players array)
     if (this.game()) {
-      this.game().players.push(newPlayer);
+      // and, only push the new player if it hasn't happened yet
+      // (without this, sometimes we get two of the new name)
+      if (!this.game().players.includes(playerName)) {
+        this.game().players.push(playerName);
+      }
     }
-    // send a note that the game was updated
-    return computed(() => this.game);
+    // send a note that the game was updated (only happens if game has changed)
+    // turns out that we don't need to send this notice to the signal... it notices the change
+    return computed(() => this.game());
   }
 }
