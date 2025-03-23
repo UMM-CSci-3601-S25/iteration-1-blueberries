@@ -113,8 +113,8 @@ export class JoinComponent {
         }
       },
       complete: () => {
-        this.router.navigate([`/games/${this.joinGameForm.value.gameId}`]);
         this.onPlayerAdd();
+        this.router.navigate([`/games/${this.joinGameForm.value.gameId}`]);
       }
     });
   }
