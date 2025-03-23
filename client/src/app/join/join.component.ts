@@ -32,6 +32,7 @@ export class JoinComponent {
       Validators.minLength(24),
       // length of the game id will be 24
       Validators.maxLength(24),
+      Validators.pattern('^[A-Fa-f0-9]{24}$')
     ])),
     playerName: new FormControl('', Validators.compose([
       Validators.required,
@@ -45,8 +46,11 @@ export class JoinComponent {
   readonly joinGameValidationMessages = {
     gameId: [
       {type: 'required', message: 'Game ID is required'},
-      {type: 'minlength', message: 'Name must be at least 24 characters long'},
-      {type: 'maxlength', message: 'Name cannot be more than 24 characters long'},
+      {type: 'minlength', message: 'Game ID must be at least 24 characters long'},
+      {type: 'maxlength', message: 'Game ID cannot be more than 24 characters long'},
+      {type: 'pattern', message: 'Game ID must be a 24 character hexadecimal string'},
+      {type: 'serverError', message: 'Game ID not found -- try a different Game ID'},
+      {type: 'badRequest', message: 'Bad request -- make sure the Game ID is a valid hexadecimal string'}
     ],
     playerName: [
       {type: 'required', message: 'Player name is required'},
@@ -84,7 +88,6 @@ export class JoinComponent {
           null,
           { duration: 5000 }
         );
-        this.onPlayerAdd();
       },
       error: err => {
         if (err.status === 400) {
@@ -93,12 +96,14 @@ export class JoinComponent {
             'OK',
             { duration: 5000 }
           );
+          this.joinGameForm.controls['gameId'].setErrors({ badRequest: err.message });
         } else if (err.status === 500) {
           this.snackBar.open(
             `The server failed to process your request to join a game. Is the server up? – Error Code: ${err.status}\nMessage: ${err.message}`,
             'OK',
             { duration: 5000 }
           );
+          this.joinGameForm.controls['gameId'].setErrors({ serverError: err.message });
         } else {
           this.snackBar.open(
             `An unexpected error occurred – Error Code: ${err.status}\nMessage: ${err.message}`,
@@ -109,6 +114,7 @@ export class JoinComponent {
       },
       complete: () => {
         this.router.navigate([`/games/${this.joinGameForm.value.gameId}`]);
+        this.onPlayerAdd();
       }
     });
   }

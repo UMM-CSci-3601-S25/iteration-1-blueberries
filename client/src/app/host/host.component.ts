@@ -28,7 +28,7 @@ export class HostComponent {
     // We allow alphanumeric input and limit the length for name.
     joincode: new FormControl('', Validators.compose([
       Validators.required,
-      Validators.minLength(1),
+      Validators.minLength(2),
       // Long join codes are very inconvenient
       Validators.maxLength(10),
     ])),

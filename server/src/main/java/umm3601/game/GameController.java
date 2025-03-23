@@ -1,16 +1,10 @@
 package umm3601.game;
 
-import static com.mongodb.client.model.Filters.eq;
-
 import java.util.Map;
 
 import org.bson.UuidRepresentation;
-import org.bson.types.ObjectId;
 import org.mongojack.JacksonMongoCollection;
 
-import com.mongodb.MongoException;
-import com.mongodb.MongoWriteConcernException;
-import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
 
@@ -30,6 +24,8 @@ public class GameController implements Controller {
   private static final String API_GAME_BY_ID = "/api/games/{id}";
   private static final String API_ADD_PLAYER = "/api/games/{id}/{player}";
   static final String JOINCODE_KEY = "joincode";
+
+  //static final String ID_REGEX = "^[A-Fa-f0-9]{6}$";
   private final JacksonMongoCollection<Game> gameCollection;
 
   /**
@@ -56,7 +52,9 @@ public class GameController implements Controller {
     Game game;
 
     try {
-      game = gameCollection.find(eq("_id", new ObjectId(id))).first();
+      game = gameCollection.findOneById(id);
+      // The next commented line is more like what we did for User, but both seem to work and the previous line is shorter
+      // game = gameCollection.find(eq("_id", new ObjectId(id))).first();
     } catch (IllegalArgumentException e) {
       throw new BadRequestResponse("The requested game id wasn't a legal Mongo Object ID.");
     }
@@ -117,28 +115,25 @@ public class GameController implements Controller {
   public void addPlayerToGame(Context ctx) {
     String id = ctx.pathParam("id");
     String newPlayer = ctx.pathParam("player");
+    Game gameToUpdate;
     try {
-      Game theGameToUpdate = gameCollection.findOneById(id);
+      gameToUpdate = gameCollection.findOneById(id);
+    } catch (IllegalArgumentException e) {
+      throw new BadRequestResponse("The requested game id wasn't a legal Mongo Object ID.");
+    }
+    if (gameToUpdate == null) {
+      throw new NotFoundResponse("The requested game was not found");
+    } else {
       // Updates.addToSet documentation can be found here:
       // https://www.mongodb.com/docs/manual/reference/operator/update/addToSet/
-      gameCollection.updateById(id, Updates.addToSet("players", newPlayer));
-      theGameToUpdate = gameCollection.findOneById(id);
-      ctx.json(theGameToUpdate);
-      // 201 (`HttpStatus.CREATED`) is the HTTP code for when we successfully
-      // create a new resource. In this case, we are updating a game, so maybe should be "OK" instead.
-      // See, e.g., https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-      // for a description of the various response codes.
-      ctx.status(HttpStatus.CREATED);
-      // There are various exceptions that mongo might throw, and I wanted different messages for them, but probably
-      // we won't really need to have quite this many. The illegal argument response has been helpful.
-    } catch (MongoWriteException mwe) {
-      throw new BadRequestResponse("the write failed due some other failure specific to the update command");
-    } catch (MongoWriteConcernException mwc) {
-      throw new BadRequestResponse("the write failed due being unable to fulfill the write concern");
-    } catch (MongoException mongoException) {
-      throw new NotFoundResponse("That game is not in the game collection (or, possibly some other error)");
-    } catch (IllegalArgumentException e) {
-      throw new BadRequestResponse("An argument was illegal -- be sure you are requesting to add to a legal game id (24 character hex code)");
+      if (gameToUpdate.players == null) {
+        gameCollection.updateById(id, Updates.set("players", new String[]{newPlayer}));
+      } else {
+        gameCollection.updateById(id, Updates.addToSet("players", newPlayer));
+      }
+      gameToUpdate = gameCollection.findOneById(id);
+      ctx.json(gameToUpdate);
+      ctx.status(HttpStatus.OK);
     }
   }
 
