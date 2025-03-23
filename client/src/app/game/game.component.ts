@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { GameService } from './game.service';
 import { WebSocketService } from './web-socket.service';
@@ -24,6 +24,8 @@ export class GameComponent {
   error = signal({ help: '', httpResponse: '', message: '' });
 
   constructor() {
+    // I'm unsure if this is the best way to set the initial value of the signal.
+    // I have noticed people seem to avoid putting things in the constructor
     this.gameService.getGameById(this.gameId).subscribe(
       (response) => {
         this.game.set(response);
@@ -40,38 +42,32 @@ export class GameComponent {
       // "all of these are optional to allow heartbeat messages to pass through",
       // but I (KK) haven't done anything with heartbeat stuff yet... apparently it helps keep things connected
 
-      if (
+      if (this.game()) { // only update a game if this component has a game object already in view
+        if (
         // The websocket message is about adding a player and refers to
         // the game this GameComponent is displaying
-        // (note: it may make more sense to look at how the websocket messaging
-        // works and only broadcast to clients that are associated with *this* game,
-        // but I don't know how to do that yet)
-        msg.type === 'ADD_PLAYER' &&
-        msg.gameId === this.gameId
-      ) {
-        this.updateGame(msg.playerName);
-        //this.game().currentRound = this.game().currentRound + 1;
-        console.log("client received broadcast for game: " + msg.gameId + " to add: " + msg.playerName);
-        console.log("The game in this component is: " + this.game());
-        //this.gameService.addPlayer(msg.gameId, msg.playerName);
+          msg.type === 'ADD_PLAYER' &&
+          msg.gameId === this.gameId
+        ) {
+          // console.log("client received broadcast for game: " + msg.gameId + " to add: " + msg.playerName);
+          this.game.update(currentGame => ({...currentGame, players: [...currentGame.players, msg.playerName] }));
+          // console.log("GameComponent: " + this + " added player: " + msg.playerName);
+          //
+          // Google Generative AI with prompt/search: "angular 19 update a property of a signal where the
+          // property is an array, without changing the object directly"
+          //
+          // told me: The update method receives the current value of the signal.
+          // A new object is then created, with the players array being replaced by a new array.
+          // This new array is created by spreading the old array and adding a new element,
+          // ensuring that the original array is not modified.
+          //
+          // Basically, the update says, "Hey, you have access to the old game as it was...
+          // I want you to keep all the old stuff from that game, but update the players array
+          // to be a new array that includes all the old players plus the new player",
+          // which ensures *immutability*, which is crucial for Angular signals to detect changes.
+          // (I previously was editing the old array more directly using 'push'.)
+        }
       }
     });
-  }
-
-  // probably, this will be updated to have optional inputs about all the ways a game could change
-  // and those things will be labeled and in a {}, but for now it's just one way to update
-  updateGame(playerName: string) {
-    // only push a new player to the array if the updateGame method was called from
-    // someplace that has a game (if game is null, don't try to push to players array)
-    if (this.game()) {
-      // and, only push the new player if it hasn't happened yet
-      // (without this, sometimes we get two of the new name)
-      if (!this.game().players.includes(playerName)) {
-        this.game().players.push(playerName);
-      }
-    }
-    // send a note that the game was updated (only happens if game has changed)
-    // turns out that we don't need to send this notice to the signal... it notices the change
-    return computed(() => this.game());
   }
 }
