@@ -29,7 +29,8 @@ public class Server {
 
   // What clients are connected via web sockets
   // Websocket stuff here was mostly taken from another repository (and, see more web sockets stuff):
-  // https://github.com/UMM-CSci-3601-F24/it-3-mary-shellys-cool-1918-howard-frankendogs-football-team/commit/877e9e4387234ee090962fb6ccd28fa25ac1e94a
+  // https://github.com/UMM-CSci-3601-F24/it-3-mary-shellys-cool-1918-howard-frankendogs-
+  // football-team/commit/877e9e4387234ee090962fb6ccd28fa25ac1e94a
   private static Set<WsContext> connectedClients = ConcurrentHashMap.newKeySet();
 
   // The `mongoClient` field is used to access the MongoDB
@@ -137,8 +138,10 @@ public class Server {
       config.bundledPlugins.enableRouteOverview("/api")
     );
 
-    // Websocket stuff here was mostly taken from another repository (and, see more web sockets stuff):
-    // https://github.com/UMM-CSci-3601-F24/it-3-mary-shellys-cool-1918-howard-frankendogs-football-team/commit/877e9e4387234ee090962fb6ccd28fa25ac1e94a
+    // Websocket stuff here was mostly taken from another repository
+    // (and, see more web sockets stuff):
+    // https://github.com/UMM-CSci-3601-F24/it-3-mary-shellys-cool-1918-howard-frankendogs-
+    // football-team/commit/877e9e4387234ee090962fb6ccd28fa25ac1e94a
     System.out.println("Configuring WebSocket endpoint...");
     server.ws("/api/websocket", ws -> {
       System.out.println("WebSocket endpoint created");
@@ -182,7 +185,8 @@ public class Server {
   /**
    * Broadcasts a message to all connected WebSocket clients.
    * Websocket stuff here was mostly taken from another repository (and, see more web sockets stuff):
-   * https://github.com/UMM-CSci-3601-F24/it-3-mary-shellys-cool-1918-howard-frankendogs-football-team/commit/877e9e4387234ee090962fb6ccd28fa25ac1e94a
+   * https://github.com/UMM-CSci-3601-F24/it-3-mary-shellys-cool-1918-howard-frankendogs
+   * -football-team/commit/877e9e4387234ee090962fb6ccd28fa25ac1e94a
    *
    * @param message The message to broadcast
    */

@@ -53,7 +53,8 @@ public class GameController implements Controller {
 
     try {
       game = gameCollection.findOneById(id);
-      // The next commented line is more like what we did for User, but both seem to work and the previous line is shorter
+      // The next commented line is more like what we did for User,
+      // but both seem to work and the previous line is shorter
       // game = gameCollection.find(eq("_id", new ObjectId(id))).first();
     } catch (IllegalArgumentException e) {
       throw new BadRequestResponse("The requested game id wasn't a legal Mongo Object ID.");
