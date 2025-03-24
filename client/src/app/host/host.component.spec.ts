@@ -62,7 +62,7 @@ describe('HostComponent', () => {
   describe('getErrorMessage()', () => {
     it('should return the correct error message', () => {
       // The type statement is needed to ensure that `controlName` isn't just any
-      // random string, but rather one of the keys of the `addUserValidationMessages`
+      // random string, but rather one of the keys of the `addGameValidationMessages`
       // map in the component.
       const controlName: keyof typeof component.addGameValidationMessages = 'joincode';
       component.addGameForm.get(controlName).setErrors({'required': true});
@@ -80,7 +80,7 @@ describe('HostComponent', () => {
   })
 });
 
-describe('AddUserComponent#submitForm()', () => {
+describe('HostGameComponent#submitForm()', () => {
   let component: HostComponent;
   let fixture: ComponentFixture<HostComponent>;
   let gameService: GameService;
@@ -124,6 +124,7 @@ describe('AddUserComponent#submitForm()', () => {
     // check that `submitForm()` is called with the right arguments below,
     // we have some reason to believe that that wasn't passing "by accident".
     component.addGameForm.controls.joincode.setValue('111');
+    component.addGameForm.controls.playerName.setValue('Kristin');
   });
 
   it('should call addGame() and handle error response for illegal game', () => {
@@ -131,16 +132,20 @@ describe('AddUserComponent#submitForm()', () => {
     const path = location.path();
     // A canned error response to be returned by the spy.
     const errorResponse = { status: 400, message: 'Illegal game error' };
-    // "Spy" on the `.addUser()` method in the user service. Here we basically
+    // "Spy" on the `.addGame()` method in the game service. Here we basically
     // intercept any calls to that method and return the error response
     // defined above.
     const addGameSpy = spyOn(gameService, 'addGame')
       .and
       .returnValue(throwError(() => errorResponse));
     component.submitForm();
-    // Check that `.addUser()` was called with the form's values which we set
+    // Check that `.addGame()` was called with the form's values which we set
     // up above.
-    expect(addGameSpy).toHaveBeenCalledWith(component.addGameForm.value);
+    expect(addGameSpy).toHaveBeenCalledWith({
+      joincode: component.addGameForm.controls.joincode.value,
+      players: [component.addGameForm.controls.playerName.value],
+      currentRound: 0,
+    });
     // Confirm that we're still at the same path.
     expect(location.path()).toBe(path);
   });
@@ -150,16 +155,20 @@ describe('AddUserComponent#submitForm()', () => {
     const path = location.path();
     // A canned error response to be returned by the spy.
     const errorResponse = { status: 404, message: 'Not found' };
-    // "Spy" on the `.addUser()` method in the user service. Here we basically
+    // "Spy" on the `.addGame()` method in the game service. Here we basically
     // intercept any calls to that method and return the error response
     // defined above.
     const addGameSpy = spyOn(gameService, 'addGame')
       .and
       .returnValue(throwError(() => errorResponse));
     component.submitForm();
-    // Check that `.addUser()` was called with the form's values which we set
+    // Check that `.addGame()` was called with the form's values which we set
     // up above.
-    expect(addGameSpy).toHaveBeenCalledWith(component.addGameForm.value);
+    expect(addGameSpy).toHaveBeenCalledWith({
+      joincode: component.addGameForm.controls.joincode.value,
+      players: [component.addGameForm.controls.playerName.value],
+      currentRound: 0,
+    });
     // Confirm that we're still at the same path.
     expect(location.path()).toBe(path);
   });
