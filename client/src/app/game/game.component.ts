@@ -50,7 +50,7 @@ export class GameComponent {
           msg.gameId === this.gameId
         ) {
           // console.log("client received broadcast for game: " + msg.gameId + " to add: " + msg.playerName);
-          this.game.update(currentGame => ({...currentGame, players: [...currentGame.players, msg.playerName] }));
+          this.game.update(currentGame => ({...currentGame, players: [...currentGame.players, msg.playerName+" boom!"] }));
           // console.log("GameComponent: " + this + " added player: " + msg.playerName);
           //
           // Google Generative AI with prompt/search: "angular 19 update a property of a signal where the
