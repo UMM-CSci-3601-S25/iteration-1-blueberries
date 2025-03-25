@@ -28,9 +28,15 @@ export class HostComponent {
     // We allow alphanumeric input and limit the length for name.
     joincode: new FormControl('', Validators.compose([
       Validators.required,
-      Validators.minLength(1),
+      Validators.minLength(2),
       // Long join codes are very inconvenient
       Validators.maxLength(10),
+    ])),
+    playerName: new FormControl('', Validators.compose([
+      Validators.required,
+      Validators.minLength(2),
+      // length of the player name must be 2-100 characters
+      Validators.maxLength(100),
     ])),
   });
 
@@ -39,6 +45,11 @@ export class HostComponent {
       {type: 'required', message: 'Join code is required'},
       {type: 'minlength', message: 'Name must be at least 2 characters long'},
       {type: 'maxlength', message: 'Name cannot be more than 10 characters long'},
+    ],
+    playerName: [
+      {type: 'required', message: 'Player name is required'},
+      {type: 'minlength', message: 'Name must be at least 2 characters long'},
+      {type: 'maxlength', message: 'Name cannot be more than 100 characters long'},
     ],
   };
 
@@ -63,7 +74,13 @@ export class HostComponent {
   }
 
   submitForm() {
-    this.gameService.addGame(this.addGameForm.value).subscribe({
+    // Make a new game with the host as the only initial player using the joincode the host chose
+    // And, since we are using the id for the game, the joincode is probably not needed, but I (KK)
+    // made joincode required in several places and haven't removed it yet (might still be useful
+    // for something since it's much easier to recognize than the id). I initially also sent a
+    // websocket message from here and I don't think we need to since this will be the first person
+    // joining and the game will be brand new (this is almost like the join page, but without websocket stuff)
+    this.gameService.addGame({joincode: this.addGameForm.value.joincode, players: [`${this.addGameForm.value.playerName}`], currentRound: 0}).subscribe({
       next: (newId) => {
         this.snackBar.open(
           `Added game with join code: ${this.addGameForm.value.joincode}`,
@@ -75,13 +92,13 @@ export class HostComponent {
       error: err => {
         if (err.status === 400) {
           this.snackBar.open(
-            `Tried to add an illegal new user – Error Code: ${err.status}\nMessage: ${err.message}`,
+            `Tried to add and host an illegal new game – Error Code: ${err.status}\nMessage: ${err.message}`,
             'OK',
             { duration: 5000 }
           );
         } else if (err.status === 500) {
           this.snackBar.open(
-            `The server failed to process your request to add a new user. Is the server up? – Error Code: ${err.status}\nMessage: ${err.message}`,
+            `The server failed to process your request to add a new game to host. Is the server up? – Error Code: ${err.status}\nMessage: ${err.message}`,
             'OK',
             { duration: 5000 }
           );
@@ -95,5 +112,4 @@ export class HostComponent {
       },
     });
   }
-
 }

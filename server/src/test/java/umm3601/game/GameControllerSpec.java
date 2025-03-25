@@ -4,6 +4,7 @@ import static com.mongodb.client.model.Filters.eq;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -15,6 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.BsonArray;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterAll;
@@ -100,9 +103,14 @@ class GameControllerSpec {
         new Document()
             .append("joincode", "5555"));
     gameId = new ObjectId();
+    BsonArray thePlayers = new BsonArray();
+    thePlayers.add(new BsonString("Kristin"));
+    thePlayers.add(new BsonString("Jeff"));
     Document sam = new Document()
         .append("_id", gameId)
-        .append("joincode", "0000");
+        .append("joincode", "0000")
+        .append("players", thePlayers)
+        .append("currentRound", 0);
 
     gameDocuments.insertMany(testGames);
     gameDocuments.insertOne(sam);
@@ -116,10 +124,11 @@ class GameControllerSpec {
     gameController.addRoutes(mockServer);
     verify(mockServer, Mockito.atLeastOnce()).get(any(), any());
     verify(mockServer, Mockito.atLeastOnce()).post(any(), any());
+    verify(mockServer, Mockito.atLeastOnce()).put(any(), any());
   }
 
   @Test
-  void getUserWithExistentId() throws IOException {
+  void getGameWithExistentId() throws IOException {
     String id = gameId.toHexString();
     when(ctx.pathParam("id")).thenReturn(id);
 
@@ -143,7 +152,7 @@ class GameControllerSpec {
   }
 
   @Test
-  void getUserWithNonexistentId() throws IOException {
+  void getGameWithNonexistentId() throws IOException {
     String id = "588935f5c668650dc77df581";
     when(ctx.pathParam("id")).thenReturn(id);
 
@@ -176,7 +185,7 @@ class GameControllerSpec {
     //   - The string (`newGameJson`) being validated
     //   - The class (`Game.class) it's trying to generate from that string
     //   - A function (`() -> Game`) which "shows" the validator how to convert
-    //     the JSON string to a `User` object. We'll again use `javalinJackson`,
+    //     the JSON string to a `Game` object. We'll again use `javalinJackson`,
     //     but in the other direction.
     when(ctx.bodyValidator(Game.class))
       .thenReturn(new BodyValidator<Game>(newGameJson, Game.class,
@@ -200,4 +209,22 @@ class GameControllerSpec {
     assertEquals(newGame.joincode, addedGame.get(GameController.JOINCODE_KEY));
   }
 
+  @Test
+  void addPlayerToGame() {
+    String id = gameId.toHexString();
+    // What should the test pretend are the values in the path parameters?
+    when(ctx.pathParam("id")).thenReturn(id);
+    when(ctx.pathParam("playerName")).thenReturn("Nic");
+
+    gameController.addPlayerToGame(ctx);
+
+    // capture the game returned from this put request
+    verify(ctx).json(gameCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+    assertEquals(gameId.toHexString(), gameCaptor.getValue()._id);
+    assertEquals("0000", gameCaptor.getValue().joincode);
+    assertEquals(0, gameCaptor.getValue().currentRound);
+    assertTrue(gameCaptor.getValue().players[0].equals("Kristin"));
+
+  }
 }

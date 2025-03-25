@@ -1,14 +1,12 @@
 package umm3601.game;
 
-import static com.mongodb.client.model.Filters.eq;
-
 import java.util.Map;
 
 import org.bson.UuidRepresentation;
-import org.bson.types.ObjectId;
 import org.mongojack.JacksonMongoCollection;
 
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Updates;
 
 import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
@@ -24,7 +22,10 @@ public class GameController implements Controller {
 
   private static final String API_GAMES = "/api/games";
   private static final String API_GAME_BY_ID = "/api/games/{id}";
+  private static final String API_ADD_PLAYER = "/api/games/{id}/{player}";
   static final String JOINCODE_KEY = "joincode";
+
+  //static final String ID_REGEX = "^[A-Fa-f0-9]{6}$";
   private final JacksonMongoCollection<Game> gameCollection;
 
   /**
@@ -51,7 +52,10 @@ public class GameController implements Controller {
     Game game;
 
     try {
-      game = gameCollection.find(eq("_id", new ObjectId(id))).first();
+      game = gameCollection.findOneById(id);
+      // The next commented line is more like what we did for User,
+      // but both seem to work and the previous line is shorter
+      // game = gameCollection.find(eq("_id", new ObjectId(id))).first();
     } catch (IllegalArgumentException e) {
       throw new BadRequestResponse("The requested game id wasn't a legal Mongo Object ID.");
     }
@@ -103,6 +107,38 @@ public class GameController implements Controller {
   }
 
   /**
+   * Add a player string to the array of players for the game
+   * (as long as the information gives "legal" values to Game fields)
+   *
+   * @param ctx a Javalin HTTP context that provides the game info
+   *  in the JSON body of the request
+   */
+  public void addPlayerToGame(Context ctx) {
+    String id = ctx.pathParam("id");
+    String newPlayer = ctx.pathParam("player");
+    Game gameToUpdate;
+    try {
+      gameToUpdate = gameCollection.findOneById(id);
+    } catch (IllegalArgumentException e) {
+      throw new BadRequestResponse("The requested game id wasn't a legal Mongo Object ID.");
+    }
+    if (gameToUpdate == null) {
+      throw new NotFoundResponse("The requested game was not found");
+    } else {
+      // Updates.addToSet documentation can be found here:
+      // https://www.mongodb.com/docs/manual/reference/operator/update/addToSet/
+      if (gameToUpdate.players == null) {
+        gameCollection.updateById(id, Updates.set("players", new String[]{newPlayer}));
+      } else {
+        gameCollection.updateById(id, Updates.addToSet("players", newPlayer));
+      }
+      gameToUpdate = gameCollection.findOneById(id);
+      ctx.json(gameToUpdate);
+      ctx.status(HttpStatus.OK);
+    }
+  }
+
+  /**
    * Sets up routes for the `game` collection endpoints.
    * A GameController instance handles the game endpoints,
    * and the addRoutes method adds the routes to this controller.
@@ -124,6 +160,13 @@ public class GameController implements Controller {
     // Add new game with the game info being in the JSON body
     // of the HTTP request (if any)
     server.post(API_GAMES, this::addNewGame);
+
+    // I (KK) modeled this after editWordList here:
+    // https://github.com/kidstech/word-river/blob/main/server/src/main/java/umm3601/Server.java
+    // Edits a Word list
+    // server.put("/api/packs/:id/:name", wordRiverController::editWordList);
+    // which uses path parameters (not sure if there was a switch from : to {} for that at some point)
+    server.put(API_ADD_PLAYER, this::addPlayerToGame);
   }
 }
 
