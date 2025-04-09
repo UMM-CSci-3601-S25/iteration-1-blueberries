@@ -1,6 +1,7 @@
 <p>game works!</p>
 @if (game()) {
   <p>{{ game().joincode }}</p>
+  <p>{{ game().currentRound }}</p>
   <p>{{ game()._id }} </p>
   @if (game().players) {
     <mat-list data-test="player-list">

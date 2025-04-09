@@ -153,6 +153,7 @@ public class Server {
 
       ws.onMessage(ctx -> {
         String message = ctx.message();
+        processMessage(message);
         System.out.println("Received message from client");
         broadcastMessage(message);
       });
@@ -180,6 +181,23 @@ public class Server {
     });
 
     return server;
+  }
+
+  private void processMessage(String message) {
+    if (message.contains("ADD_PLAYER")) {
+      String[] parts = message.split("playerName");
+      System.out.println("****************************************");
+      System.out.println("PARTS"+parts.toString());
+      for (String part : parts) {
+        System.out.println("PART: " + part);
+      };
+      String name = parts[1];
+      System.out.println("The name seems to be: " + name
+        .replaceAll("\"", "")
+        .replaceAll("}", "")
+        .replaceAll(":", "")
+      );
+    }
   }
 
   /**

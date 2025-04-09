@@ -19,6 +19,7 @@ export class GameComponent {
   gameService = inject(GameService);
   route = inject(ActivatedRoute);
   game = signal<Game | null>(null);
+  players = signal<string[] | undefined>(undefined);
   gameId: string = this.route.snapshot.params['id'];
 
   error = signal({ help: '', httpResponse: '', message: '' });
@@ -69,5 +70,18 @@ export class GameComponent {
         }
       }
     });
+    this.players.set(this.game()?.players);
+
+    this.onFirstPlayerAdd();
+  }
+
+  onFirstPlayerAdd() {
+    const message = {
+      type: 'ADD_PLAYER_FIRST',
+      gameId: this.gameId,
+      playerName: "HOST",
+    };//important that this is 'ADD_PLAYER_FIRST' and not 'ADD_PLAYER'
+
+    this.webSocketService.sendMessage(message);
   }
 }
