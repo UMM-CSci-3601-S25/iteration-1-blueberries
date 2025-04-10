@@ -154,7 +154,15 @@ public class Server {
       ws.onMessage(ctx -> {
         String message = ctx.message();
         processMessage(message);
-        System.out.println("Received message from client");
+        System.out.println("Session ID:" + ctx.sessionId());
+        for (String header : ctx.headerMap().keySet()) {
+          System.out.println("Header:  " + header + " Value:  " + ctx.header(header));
+        };
+        for (String key : ctx.attributeMap().keySet()) {
+          System.out.println("Attribute:  " + key + " Value:  " + ctx.attribute(key));
+        };
+        //System.out.println("AttributeMap ID:" + ctx.attributeMap());
+        System.out.println("Received message from client: " + ctx.toString());
         broadcastMessage(message);
       });
 

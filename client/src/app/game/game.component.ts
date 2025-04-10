@@ -71,17 +71,5 @@ export class GameComponent {
       }
     });
     this.players.set(this.game()?.players);
-
-    this.onFirstPlayerAdd();
-  }
-
-  onFirstPlayerAdd() {
-    const message = {
-      type: 'ADD_PLAYER_FIRST',
-      gameId: this.gameId,
-      playerName: "HOST",
-    };//important that this is 'ADD_PLAYER_FIRST' and not 'ADD_PLAYER'
-
-    this.webSocketService.sendMessage(message);
   }
 }

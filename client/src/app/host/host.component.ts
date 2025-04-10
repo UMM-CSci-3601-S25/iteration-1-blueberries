@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { GameService } from '../game/game.service';
+import { WebSocketService } from '../game/web-socket.service';
 
 @Component({
   selector: 'app-host',
@@ -54,6 +55,7 @@ export class HostComponent {
   };
 
   constructor(
+    private webSocketService: WebSocketService,
     private gameService: GameService,
     private snackBar: MatSnackBar,
     private router: Router) {
@@ -88,8 +90,9 @@ export class HostComponent {
           { duration: 2000 }
         );
         this.router.navigate(['/games/', newId]);
+        this.onFirstPlayerAdd(newId);
       },
-      error: err => {
+      error: (err) => {
         if (err.status === 400) {
           this.snackBar.open(
             `Tried to add and host an illegal new game – Error Code: ${err.status}\nMessage: ${err.message}`,
@@ -111,5 +114,16 @@ export class HostComponent {
         }
       },
     });
+  }
+
+  onFirstPlayerAdd(newId: string) {
+    // Send a websocket message to add the first player to the game
+    const message = {
+      type: 'ADD_PLAYER_FIRST',
+      gameId: newId,
+      playerName: this.addGameForm.value.playerName,
+    };
+
+    this.webSocketService.sendMessage(message);
   }
 }
