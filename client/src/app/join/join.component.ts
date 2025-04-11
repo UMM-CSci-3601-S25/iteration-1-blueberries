@@ -127,5 +127,9 @@ export class JoinComponent {
     };
 
     this.webSocketService.sendMessage(message);
+    sessionStorage.setItem('gameId', this.joinGameForm.value.gameId);
+    // we probably won't want to (ultimately) store the player name in session storage,
+    // but for now we will since we don't have a player object yet (from which to get an id)
+    sessionStorage.setItem('playerName', this.joinGameForm.value.playerName);
   }
 }

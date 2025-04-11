@@ -125,5 +125,12 @@ export class HostComponent {
     };
 
     this.webSocketService.sendMessage(message);
+    sessionStorage.setItem('gameId', newId);
+    // we probably won't want to (ultimately) store the player name in session storage,
+    // but for now we will since we don't have a player object yet (from which to get an id)
+    sessionStorage.setItem('playerName', this.addGameForm.value.playerName);
+    sessionStorage.setItem('isHost', 'true');
+    sessionStorage.setItem('isJudge', 'true');
+    sessionStorage.setItem('roundsWon', '0');
   }
 }
