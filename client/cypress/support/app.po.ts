@@ -1,13 +1,13 @@
 export class AppPage {
 
-  private readonly baseUrl = '/';
+  private readonly url = '/';
   private readonly titleSelector = '.app-title';
   private readonly sideNavButton = '.sidenav-button';
   private readonly sideNav = '.sidenav';
   private readonly sideNavOption = '[routerlink] > .mdc-list-item__content';
 
   navigateTo() {
-    return cy.visit(this.baseUrl);
+    return cy.visit(this.url);
   }
 
   getAppTitle() {

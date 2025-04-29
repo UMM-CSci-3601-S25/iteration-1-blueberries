@@ -1,5 +1,5 @@
 export class CompanyListPage {
-  private readonly baseUrl = '/companies';
+  private readonly url = '/companies';
   private readonly pageTitle = '.company-list-title';
   private readonly companyCardSelector = '.company-cards-container .company-card';
   // private readonly userListItemsSelector = '.user-nav-list .user-list-item';
@@ -10,7 +10,7 @@ export class CompanyListPage {
   // private readonly addUserButtonSelector = '[data-test=addUserButton]';
 
   navigateTo() {
-    return cy.visit(this.baseUrl);
+    return cy.visit(this.url);
   }
 
   /**

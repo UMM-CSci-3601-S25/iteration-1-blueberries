@@ -1,0 +1,46 @@
+<p>Use a Game ID and player name to join a game</p>
+<form [formGroup]="joinGameForm" (ngSubmit)="submitForm();">
+  <mat-card class="add-user-card">
+    <mat-card-header>
+      <mat-card-title class="add-game-title">Join a game</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="flex-col">
+
+        <mat-form-field>
+          <mat-label for="gameId">Game ID</mat-label>
+          <input matInput type="text"
+            formControlName="gameId" required>
+          @if (formControlHasError('gameId')) {
+            <mat-error data-test="gameIdError">{{getErrorMessage('gameId')}}
+            </mat-error>
+          }
+        </mat-form-field>
+        <br /><!--added this break to allow space fpr longer error messages-->
+        <mat-form-field>
+          <mat-label for="playerName">Player Name</mat-label>
+          <input matInput type="text"
+            formControlName="playerName" required>
+          @if (formControlHasError('playerName')) {
+            <mat-error data-test="playerNameError">{{getErrorMessage('playerName')}}
+            </mat-error>
+          }
+        </mat-form-field>
+
+      </div>
+
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button
+        mat-raised-button
+        type="button"
+        color="primary"
+        [disabled]="!joinGameForm.valid"
+        type="submit"
+        data-test="confirmJoinButton"
+        >
+        JOIN GAME
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</form>
