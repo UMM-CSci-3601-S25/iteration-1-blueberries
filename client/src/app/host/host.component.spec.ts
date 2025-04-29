@@ -90,7 +90,8 @@ describe('HostGameComponent#submitForm()', () => {
   beforeEach(() => {
     TestBed.overrideProvider(GameService, { useValue: new MockGameService() });
     TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule,
+      imports: [
+        ReactiveFormsModule,
         MatSnackBarModule,
         MatCardModule,
         MatInputModule,
@@ -98,7 +99,9 @@ describe('HostGameComponent#submitForm()', () => {
         RouterModule.forRoot([
           { path: 'games/1', component: GameComponent }
         ]),
-        HostComponent, GameComponent],
+        HostComponent,
+        GameComponent,
+      ],
       providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
     }).compileComponents().catch(error => {
       expect(error).toBeNull();
