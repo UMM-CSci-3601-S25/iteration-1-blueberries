@@ -50,7 +50,7 @@ export class GameComponent {
           msg.gameId === this.gameId
         ) {
           // console.log("client received broadcast for game: " + msg.gameId + " to add: " + msg.playerName);
-          this.game.update(currentGame => ({...currentGame, players: [...currentGame.players, msg.playerName+" boom!"] }));
+          this.game.update(currentGame => ({...currentGame, players: [...currentGame.players, `${msg.playerName} boom!`] }));
           // console.log("GameComponent: " + this + " added player: " + msg.playerName);
           //
           // Google Generative AI with prompt/search: "angular 19 update a property of a signal where the
@@ -58,7 +58,7 @@ export class GameComponent {
           //
           // told me: The update method receives the current value of the signal.
           // A new object is then created, with the players array being replaced by a new array.
-          // This new array is created by spreading the old array and adding a new element,
+          // This new array is created by "spreading the old array" (that's what the `...` does) and adding a new element,
           // ensuring that the original array is not modified.
           //
           // Basically, the update says, "Hey, you have access to the old game as it was...
