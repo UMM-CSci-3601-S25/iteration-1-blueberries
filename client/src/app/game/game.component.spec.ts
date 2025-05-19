@@ -38,4 +38,8 @@ describe('GameComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should have a game service', () => {
+    expect(component.gameService).toBeTruthy();
+  });
 });
