@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, flush, TestBed, tick } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import { JoinComponent } from './join.component';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -14,7 +14,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Router, RouterModule } from '@angular/router';
 import { GameComponent } from '../game/game.component';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { Game } from '../game/game';
 
 describe('JoinComponent', () => {
   let component: JoinComponent;
@@ -85,6 +86,7 @@ describe('JoinGameComponent#submitForm()', () => {
   let fixture: ComponentFixture<JoinComponent>;
   let gameService: GameService;
   let location: Location;
+  let expectedGame: Game;
 
 
   beforeEach(() => {
@@ -96,7 +98,7 @@ describe('JoinGameComponent#submitForm()', () => {
         MatInputModule,
         BrowserAnimationsModule,
         RouterModule.forRoot([
-          { path: 'games/1', component: GameComponent }
+          { path: 'games/111222333444555666777888', component: GameComponent }
         ]),
         JoinComponent, GameComponent],
       providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
@@ -115,6 +117,14 @@ describe('JoinGameComponent#submitForm()', () => {
     // and ignore the returned values.
     TestBed.inject(Router);
     TestBed.inject(HttpTestingController);
+    TestBed.runInInjectionContext(() => {
+      expectedGame = {
+        _id: '111222333444555666777888',
+        joincode: '111',
+        players: ['Kristin'],
+        currentRound: 0
+      };
+    })
     fixture.detectChanges();
   });
 
@@ -126,6 +136,18 @@ describe('JoinGameComponent#submitForm()', () => {
     component.joinGameForm.controls.gameId.setValue('111222333444555666777888');
     component.joinGameForm.controls.playerName.setValue('Kristin');
   });
+
+  it('should call addGame() and handle success response', fakeAsync(() => {
+    fixture.ngZone.run(() => {
+      // make a spy that is waiting for addGame to be called so it can return '1'
+      const addPlayerSpy = spyOn(gameService, 'addPlayer').and.returnValue(of(expectedGame));
+      component.submitForm();
+      expect(addPlayerSpy).toHaveBeenCalledWith(component.joinGameForm.value.gameId, component.joinGameForm.value.playerName);
+      tick();
+      expect(location.path()).toBe('/games/111222333444555666777888');
+      flush();
+    });
+  }));
 
   it('should call addPlayer() and handle error response for illegal game', () => {
     // Save the original path so we can check that it doesn't change.
