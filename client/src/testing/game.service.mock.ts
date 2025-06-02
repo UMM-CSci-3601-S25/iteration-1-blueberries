@@ -5,7 +5,7 @@ import { Game } from '../app/game/game';
 import { GameService } from '../app/game/game.service';
 
 /**
- * A "mock" version of the `UserService` that can be used to test components
+ * A "mock" version of the `GameService` that can be used to test components
  * without having to create an actual service. It needs to be `Injectable` since
  * that's how services are typically provided to components.
  */
@@ -34,15 +34,11 @@ export class MockGameService extends GameService {
 
   // skipcq: JS-0105
   getGameById(id: string): Observable<Game> {
-    // If the specified ID is for one of the first two test games,
+    // If the specified ID is for the first test game,
     // return that game, otherwise return `null` so
     // we can test illegal game requests.
     // If you need more, just add those in too.
-    if (id === MockGameService.testGames[0]._id) {
-      return of(MockGameService.testGames[0]);
-    } else if (id === MockGameService.testGames[1]._id) {
-      return of(MockGameService.testGames[1]);
-    } else {
+    if (id !== MockGameService.testGames[0]._id) {
       return of(null);
     }
   }

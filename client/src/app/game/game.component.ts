@@ -4,6 +4,7 @@ import { GameService } from './game.service';
 import { WebSocketService } from './web-socket.service';
 import { MatListModule } from '@angular/material/list';
 import { Game } from './game';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-game',
@@ -31,7 +32,7 @@ export class GameComponent {
         this.game.set(response);
       });
 
-    this.webSocketService.getMessage().subscribe((message: unknown) => {
+    this.webSocketService.getMessage().pipe(takeUntilDestroyed()).subscribe((message: unknown) => {
       const msg = message as {
         type?: string;
         gameId?: string;

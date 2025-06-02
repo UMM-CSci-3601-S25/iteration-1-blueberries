@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, flush, TestBed, tick } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import { HostComponent } from './host.component';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -14,7 +14,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Router, RouterModule } from '@angular/router';
 import { GameComponent } from '../game/game.component';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 describe('HostComponent', () => {
   let component: HostComponent;
@@ -128,7 +128,21 @@ describe('HostGameComponent#submitForm()', () => {
     // we have some reason to believe that that wasn't passing "by accident".
     component.addGameForm.controls.joincode.setValue('111');
     component.addGameForm.controls.playerName.setValue('Kristin');
+    // since the subscription uses these values to determine the message, we will be checking
+    // that these values are used appropriately (won't be *just* the form values)
   });
+
+  it('should call addGame() and handle success response', fakeAsync(() => {
+    fixture.ngZone.run(() => {
+      // make a spy that is waiting for addGame to be called so it can return '1'
+      const addGameSpy = spyOn(gameService, 'addGame').and.returnValue(of('1'));
+      component.submitForm();
+      expect(addGameSpy).toHaveBeenCalledWith({joincode: component.addGameForm.value.joincode, players: [`${component.addGameForm.value.playerName}`], currentRound: 0});
+      tick();
+      expect(location.path()).toBe('/games/1');
+      flush();
+    });
+  }));
 
   it('should call addGame() and handle error response for illegal game', () => {
     // Save the original path so we can check that it doesn't change.
