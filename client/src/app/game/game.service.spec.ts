@@ -46,7 +46,7 @@ describe('GameService', () => {
     httpTestingController.verify();
   });
 
-  describe('When getUserById() is given an ID', () => {
+  describe('When getGameById() is given an ID', () => {
     /* We really don't care what `getGameById()` returns. Since all the
       * interesting work is happening on the server, `getGameById()`
       * is really just a "pass through" that returns whatever it receives,
@@ -65,7 +65,7 @@ describe('GameService', () => {
     it('calls api/games/id with the correct ID', waitForAsync(() => {
       // We're just picking a User "at random" from our little
       // set of Users up at the top.
-      const targetGame: Game = testGames[1];
+      const targetGame: Game = testGames[0];
       const targetId: string = targetGame._id;
 
       // Mock the `httpClient.get()` method so that instead of making an HTTP request
@@ -87,6 +87,64 @@ describe('GameService', () => {
         expect(mockedMethod)
           .withContext('talks to the correct endpoint')
           .toHaveBeenCalledWith(`${gameService.gameUrl}/${targetId}`);
+      });
+    }));
+  });
+
+  describe('Adding a game using `addGame()`', () => {
+    it('talks to the right endpoint and is called once', waitForAsync(() => {
+      const game_id = 'kkGameId';
+      const expected_http_response = { id: game_id } ;
+
+      // Mock the `httpClient.addGame()` method, so that instead of making an HTTP request,
+      // it just returns our expected HTTP response.
+      const mockedMethod = spyOn(httpClient, 'post')
+        .and
+        .returnValue(of(expected_http_response));
+
+      gameService.addGame(testGames[0]).subscribe((new_game_id) => {
+        expect(new_game_id).toBe(game_id);
+        expect(mockedMethod)
+          .withContext('one call')
+          .toHaveBeenCalledTimes(1);
+        expect(mockedMethod)
+          .withContext('talks to the correct endpoint')
+          .toHaveBeenCalledWith(gameService.gameUrl, testGames[0]);
+      });
+    }));
+  });
+
+  //addPlayer(gameId: string, newPlayer: string): Observable<Game> {
+  // Look at the game with the given id, take all the values, but update the players to add the new one
+  //return this.httpClient.put<Game>(`${this.gameUrl}/${gameId}/${newPlayer}`, null);
+  // }
+
+  describe('Updating a game using `addPlayer()`', () => {
+    it('talks to the right endpoint and is called once', waitForAsync(() => {
+      const game_id = 'kkGameId';
+      const expected_http_response = {
+        _id: 'kkGameId',
+        joincode: '111',
+        players: [ 'KK', 'Jeff', 'Maura', 'Anne', 'Wren' ],
+        currentRound: 0
+      } ;
+      const player_to_add = 'Wren';
+
+      // Mock the `httpClient.addGame()` method, so that instead of making an HTTP request,
+      // it just returns our expected HTTP response.
+      const mockedMethod = spyOn(httpClient, 'put')
+        .and
+        .returnValue(of(expected_http_response));
+
+      gameService.addPlayer( testGames[0]._id, player_to_add ).subscribe((updated_game) => {
+        expect(updated_game._id).toBe(game_id);
+        expect(updated_game).toBe(expected_http_response);
+        expect(mockedMethod)
+          .withContext('one call')
+          .toHaveBeenCalledTimes(1);
+        expect(mockedMethod)
+          .withContext('talks to the correct endpoint')
+          .toHaveBeenCalledWith(`${gameService.gameUrl}/${game_id}/${player_to_add}`, null);
       });
     }));
   });
