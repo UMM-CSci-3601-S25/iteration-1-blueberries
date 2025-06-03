@@ -7,7 +7,29 @@
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        This is a home page! It doesn't do anything!
+        <mat-card-actions>
+          <button
+            mat-raised-button
+            type="button"
+            color="primary"
+            data-test="hostButton"
+            routerLink="/games/new"
+            >
+            Host a game
+          </button>
+        </mat-card-actions>
+        &nbsp;
+        <mat-card-actions>
+          <button
+            mat-raised-button
+            type="button"
+            color="primary"
+            data-test="joinButton"
+            routerLink="/games/join"
+            >
+            Join a game
+          </button>
+        </mat-card-actions>
       </mat-card-content>
     </mat-card>
   </div>
