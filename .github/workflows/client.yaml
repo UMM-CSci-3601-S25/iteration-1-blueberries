@@ -21,7 +21,7 @@ jobs:
         cache-dependency-path: ./client/package-lock.json
 
     - name: Install dependencies (npm ci)
-      run: npm ci
+      run: npm ci --force
       env:
         CYPRESS_INSTALL_BINARY: 0
 
