@@ -113,17 +113,24 @@ describe('Add user', () => {
       // hopefully ensures that the server (and database) have completed all their
       // work, and that we should have a properly formed page on the client end
       // to check.
-      cy.intercept('/api/users').as('addUser');
+      cy.intercept('POST', '/api/users').as('addUser');
+
       page.addUser(user);
-      cy.wait('@addUser');
+      cy.wait('@addUser').then(({response}) => {
+        expect(response.statusCode).to.eq(201);
+      });
+
+      expect(cy.url()
+        .should('match', /\/users\/[0-9a-fA-F]{24}$/)
+        .should('not.match', /\/users\/new$/));
 
       // New URL should end in the 24 hex character Mongo ID of the newly added user.
       // We'll wait up to five full minutes for this these `should()` assertions to succeed.
       // Hopefully that long timeout will help ensure that our Cypress tests pass in
       // GitHub Actions, where we're often running on slow VMs.
-      cy.url({ timeout: 300000 })
-        .should('match', /\/users\/[0-9a-fA-F]{24}$/)
-        .should('not.match', /\/users\/new$/);
+      // cy.url({ timeout: 300000 })
+      //   .should('match', /\/users\/[0-9a-fA-F]{24}$/)
+      //   .should('not.match', /\/users\/new$/);
 
       // The new user should have all the same attributes as we entered
       cy.get('.user-card-name').should('have.text', user.name);
@@ -151,7 +158,11 @@ describe('Add user', () => {
       // around this `page.addUser(user)` call. If we _did_ add them, the test wouldn't
       // actually fail because a `cy.wait()` that times out isn't considered a failure,
       // although we could catch the timeout and turn it into a failure if we needed to.
+      cy.intercept('POST', '/api/users').as('addUser');
       page.addUser(user);
+      cy.wait('@addUser').then(({response}) => {
+        expect(response.statusCode).to.eq(400);
+      });
 
       // We should get an error message
       page.getSnackBar().should('contain', 'Tried to add an illegal new user');
