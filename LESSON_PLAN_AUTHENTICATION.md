@@ -170,9 +170,9 @@ header.payload.signature
    - Enter project name: "YourApp-Auth"
    - Click "Create"
 
-3. **Enable Google+ API**
+3. **Enable Google's Identity Toolkit API**
    - Go to "APIs & Services" → "Library"
-   - Search for "Google+ API" or "Google Identity"
+   - Search for "Identity Toolkit API"
    - Click "Enable"
 
 ### Step 2: Configure OAuth Consent Screen
